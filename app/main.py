@@ -1,5 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from py2neo import Graph
+from py2neo.data import Node, Relationship
 import json
 
 app = FastAPI()
@@ -21,7 +22,10 @@ def search(keyword: str=None):
 
 @app.get("/cve/{cve_id}")
 def scann_cve(cve_id: str):
-    return {"yourcveid": cve_id}
+    if not cve_id:
+        raise HTTPException(status_code=404, detail="No cve_id specified!")
+    ret = graph.run('match (n:CVE) where n.name="{}" return  n'.format(cve_id)).data()
+    return {cve_id: json.dumps(ret)}
 
 @app.get("/vendor/{vendor_name}")
 def search_vendor(vendor_name: str):
