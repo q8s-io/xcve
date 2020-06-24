@@ -1,9 +1,12 @@
 #!/usr/bin/python
 # -* - coding: UTF-8 -* -
 
-from fastapi import FastAPI, Form, HTTPException
+from fastapi import FastAPI, Form, HTTPException, Query
 from py2neo import Graph
 from py2neo.data import Node, Relationship
+from enum import Enum
+from pydantic import BaseModel
+from typing import Set
 import json
 
 app = FastAPI()
@@ -22,40 +25,84 @@ def cve_relate_nodes(cve_id):
         ret[rlname].append(x)
     return ret
 
+
 @app.get("/")
 @app.get("/random")
 def random():
-    # generate something random that maybe useful on main page.
     ret = graph.run('match (cve:CVE) with cve, rand() as number return cve order by number limit 10').data()
     return ret
 
-@app.get("/search/{keyword}")
-def search(keyword: str=None):
+
+class Item(BaseModel):
+    tax: float = None
+    cves: Set[dict] = []
+class TypeName(str, Enum):
+    vendor = "vendor"
+    product = "product"
+    proversion = "proversion"
+@app.get("/search",
+    response_model=Item,
+    summary="搜索关键字",
+    description="如果是某种类型的搜索，会精准匹配。默认类型搜索的是product，模糊匹配",
+)
+async def search(
+    cate: TypeName = Query(
+        None,
+        description="搜索的类型",
+        ),
+    keyword: str = Query(
+        None,
+        description="关键字",
+        max_length=20,
+        )
+    ):
     return {"yourkey": keyword}
 
-@app.get("/hot/{keyword}")
-def hot_key(keyword: str):
-    keys = graph.run('match (x:Vendor) where x.name starts with "{}" return x limit 5 union match (x:Product) where x.name starts with "{}" return x limit 5'.format(keyword, keyword)).data()
+
+@app.get("/sug",
+    summary="猜想",
+    description="根据传入的参数，猜想用户想搜的关键字",
+)
+async def sug(
+    prefix: str = Query(
+        None,
+        description="以此参数为前缀，猜想出相关的实体。实体类型可能是：vendor、product",
+        max_length=50,
+        )
+    ):
+    keys = graph.run('match (x:Vendor) where x.name starts with "{}" return x limit 5 union match (x:Product) where x.name starts with "{}" return x limit 5'.format(prefix, prefix)).data()
     return [i.get('x').get('name') for i in keys]
 
-@app.get("/cve/{cve_id}")
-def scann_cve(cve_id: str):
-    # abs match cve-number
+
+@app.get("/cve",
+    summary="cve搜索",
+    description="精准匹配cve编号",
+)
+async def scann_cve(
+    cve_id: str = Query(
+        None,
+        description="精确的cve编号，如CVE-2020-9480",
+        max_length=50,
+        )
+    ):
     if not cve_id:
         raise HTTPException(status_code=404, detail="No cve_id specified!")
     cve = graph.run('match (cve:CVE) where cve.name="{}" return cve'.format(cve_id)).data()[0]
     cve['relations'] = cve_relate_nodes(cve_id)
     return {cve_id: cve}
 
+
 @app.get("/vendor/{vendor_name}")
 def search_vendor(vendor_name: str):
     # abs search by vendor
     return {"vendor_name": vendor_name}
 
+
 @app.get("/product/{product_name}")
 def search_product(product_name: str):
     # abs search by product
     return {"product_name": product_name}
+
 
 @app.get("/proversion/{proversion_name}")
 def proversion(proversion_name: str):
