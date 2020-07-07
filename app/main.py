@@ -2,6 +2,7 @@
 # -* - coding: UTF-8 -* -
 
 from fastapi import FastAPI, Form, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 from py2neo import Graph
 from py2neo.data import Node, Relationship
 from enum import Enum
@@ -10,6 +11,16 @@ from typing import Set
 import json
 
 app = FastAPI()
+# CROS
+# read more: https://fastapi.tiangolo.com/tutorial/cors/
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'], # allow any origin.
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 graph = Graph(host="xcve-neo4j", password='streams')
 
 
