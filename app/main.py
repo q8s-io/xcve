@@ -66,11 +66,12 @@ async def search(
 async def sug(
     prefix: str = Query(
         None,
-        description="以此参数为前缀，猜想出相关的实体。实体类型可能是：vendor、product",
+        description="以此参数为前缀，猜想出相关的实体。实体类型可能是：CVE",
         max_length=50,
         )
     ):
-    keys = graph.run('match (x:Vendor) where x.name starts with "{}" return x limit 5 union match (x:Product) where x.name starts with "{}" return x limit 5'.format(prefix, prefix)).data()
+    # keys = graph.run('match (x:Vendor) where x.name starts with "{}" return x limit 5 union match (x:Product) where x.name starts with "{}" return x limit 5'.format(prefix, prefix)).data()
+    keys = graph.run('match (x:CVE) with x, rand() as number where toLower(x.name) starts with toLower("{}") return x order by number limit 5'.format(prefix, prefix)).data()
     return [i.get('x').get('name') for i in keys]
 
 
@@ -81,7 +82,7 @@ async def sug(
 async def scann_cve(
     cve_id: str = Query(
         None,
-        description="精确的cve编号，如CVE-2020-9480",
+        description="精确的cve编号，如CVE-2000-0981",
         max_length=50,
         )
     ):
