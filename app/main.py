@@ -44,6 +44,28 @@ def random():
     return ret
 
 
+@app.get("/frontconf",
+    summary="获取前端相关配置",
+    description="前端可能需要一些配置持久化到后端，比如配色、图形的色值、半径，字体大小等。",
+)
+async def frontconf():
+    return {
+        "graph": {
+            ":product": {
+                "color": "#6699CC",
+            },
+            ":cve": {
+                "color": "##99CCFF",
+            },
+            ":vendor": {
+                "color": "#66CCCC",
+            },
+            ":proversion": {
+                "color": "#FFCCCC",
+            }
+        }
+    }
+
 class Item(BaseModel):
     tax: float = None
     cves: Set[dict] = []
