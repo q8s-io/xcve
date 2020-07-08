@@ -24,7 +24,13 @@ app.add_middleware(
 graph = Graph(host="xcve-neo4j", password='streams')
 
 
-def cve_relate_nodes(cve_id):
+def cve_relate_nodes(cve_id, deep):
+    '''
+    i.get('x').identity  # node's ID
+    i.get('x').labels  # node's labels as list
+    i.get('x')['name']  # value of name in node
+    i.get('r').__class__.__name__  # relation's name
+    '''
     ret = {}
     relations = graph.run('match (cve:CVE)-[r]->(x) where cve.name="{}" return r,x'.format(cve_id)).data()
     for i in relations:
@@ -34,6 +40,71 @@ def cve_relate_nodes(cve_id):
         x = dict(i.get('x'))
         x['label'] = str(i.get('x').labels)
         ret[rlname].append(x)
+    return ret
+
+def cve_relate_nodes_v3(cve_id, deep):
+    nodes = {}
+    edges = []
+    relations = graph.run('match (cve:CVE)-[r1]->(x)<-[r2:FORK|PRODUCE]-(y) where cve.name="{}" return cve, r1, x, r2, y'.format(cve_id)).data()
+    # cve--r1--> x <--r2--y
+    for i in relations:
+        # make nodes
+        def append_nodes(n):
+            if n.identity not in nodes:
+                print(n._labels)
+                nodes[n.identity] = {
+                            "id": n.identity,
+                            "label": n.get('name', 'N/A'),
+                            "class": list(n._labels)[0],
+                        }
+        append_nodes(i.get('cve')) # cve_id => cve ID
+        append_nodes(i.get('x'))
+        append_nodes(i.get('y'))
+        # make edges
+        def append_edges(s, label, t):
+            edges.append({
+                    "source": s,
+                    "target": t,
+                    "label": label,
+                    # weight: 2
+                })
+        append_edges(i.get('cve').identity, i.get('r1').__class__.__name__, i.get('x').identity)
+        append_edges(i.get('y').identity, i.get('r2').__class__.__name__, i.get('x').identity)
+    nodes = list(nodes.values())
+    ret = {
+        "nodes": nodes,
+        "edges": edges,
+    }
+    return ret
+
+
+def cve_relate_nodes_v2(cve_id, deep):
+    nodes = {}
+    edges = {}
+    relations = graph.run('match (cve:CVE)-[r]->(x)<-[s:EFFECT]-(y) where cve.name="{}" return r,x, s, y'.format(cve_id)).data()
+    for i in relations:
+        # make nodes
+        def append_nodes(n):
+            if n.identity not in nodes:
+                nodes[n.identity] = {
+                            "id": n.identity,
+                            "label": n.get('name', 'N/A'),
+                            "class": n.labels,
+                        }
+        append_nodes(i.get('x'))
+        append_nodes(i.get('y'))
+        # make edges
+        def append_edges(s, label, t):
+            edges.append({
+                    "source": s,
+                    "target": t,
+                    "label": label,
+                    # weight: 2
+                })
+        append_edges(root, 'EFFECT', i.get('x').identity)
+        append_edges(i.get('y').identity, 'EFFECT', i.get('x').identity)
+    nodes = list(nodes.values())
+    print(nodes)
     return ret
 
 
@@ -51,16 +122,16 @@ def random():
 async def frontconf():
     return {
         "graph": {
-            ":product": {
+            "product": {
                 "color": "#6699CC",
             },
-            ":cve": {
+            "cve": {
                 "color": "##99CCFF",
             },
-            ":vendor": {
+            "vendor": {
                 "color": "#66CCCC",
             },
-            ":proversion": {
+            "proversion": {
                 "color": "#FFCCCC",
             }
         }
@@ -113,6 +184,12 @@ async def sug(
     description="精准匹配cve编号",
 )
 async def scann_cve(
+    deep: int = Query(
+        1,
+        description="图的遍历深度",
+        le = 3,
+        ge = 1,
+        ),
     cve_id: str = Query(
         None,
         description="精确的cve编号，如CVE-2000-0981",
@@ -122,13 +199,12 @@ async def scann_cve(
     if not cve_id:
         raise HTTPException(status_code=404, detail="No cve_id specified!")
     cve = graph.run('match (cve:CVE) where cve.name="{}" return cve'.format(cve_id)).data()[0]
-    cve['relations'] = cve_relate_nodes(cve_id)
+    cve['relations'] = cve_relate_nodes_v3(cve_id, deep)
     return {cve_id: cve}
 
 
 @app.get("/vendor/{vendor_name}")
 def search_vendor(vendor_name: str):
-    # abs search by vendor
     return {"vendor_name": vendor_name}
 
 

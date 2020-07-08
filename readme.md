@@ -27,4 +27,4 @@ neo4j@neo4j> :source /app/csv2neo.cypher
 #### 关于cve数据源
 neo4j支持从csv导入数据，cves.csv来自于开源漏扫工具openvas。openvas中有一个结构化的sqlite数据库scap.db，其中包含了从CVE-1999-0001到CVE-2019-9978的cve漏洞。要通过scap.db生成可用的cves.csv还需要做一些适配工作：
 1、将scap.db:cves保存为csv文件。
-2、修改csv文件中的\"替换为\\"    否则neo4j会解析错误。
+2、修改csv文件中的\"替换为\\"    否则neo4j会解析错误。csv中不要有\""，""本来是把"转义了，但是\会把前一个"给再次转义，导致""孤立
