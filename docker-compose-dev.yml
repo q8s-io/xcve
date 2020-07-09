@@ -1,13 +1,17 @@
-version: '3'
+version: '3.4'
 services:
   neo4j:
     # docker run --name testneo4j -p7474:7474 -p7687:7687 -d -v $HOME/neo4j/data:/data -v $HOME/neo4j/logs:/logs -v $HOME/neo4j/import:/var/lib/neo4j/import -v $HOME/neo4j/plugins:/plugins --env NEO4J_AUTH=neo4j/test neo4j:latest
     image: neo4j:4.0.4
     hostname: xcve-neo4j
     container_name: xcve-neo4j
+    network_mode: "host"
     ports:
       - "7474:7474"
       - "7687:7687"
+    tmpfs:
+      - /run
+      - /data/tmp
     volumes:
       - ./neo4j/plugins:/plugins
       - ./neo4j/data:/data
@@ -18,12 +22,15 @@ services:
       NEO4J_AUTH: neo4j/streams
       NEO4J_dbms_logs_debug_level: DEBUG
   web:
-    build: .
-    volumes:
-      - ./app/main.py:/app/main.py
     hostname: xcve-web
     container_name: xcve-web
+    network_mode: "host"
+    build:
+      context: .
+      network: host
+    volumes:
+      - ./app/main.py:/app/main.py
     ports:
-      - "8088:80"
+      - "8099:8099"
     depends_on:
       - neo4j

@@ -8,6 +8,9 @@ services:
     ports:
       - "7474:7474"
       - "7687:7687"
+    tmpfs:
+      - /run
+      - /data/tmp
     volumes:
       - ./neo4j/plugins:/plugins
       - ./neo4j/data:/data
@@ -22,6 +25,6 @@ services:
     hostname: xcve-web
     container_name: xcve-web
     ports:
-      - "8088:80"
+      - "8099:8099"
     depends_on:
       - neo4j

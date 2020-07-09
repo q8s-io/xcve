@@ -21,7 +21,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-graph = Graph(host="xcve-neo4j", password='streams')
+#graph = Graph(host="xcve-neo4j", password='streams')
+graph = Graph(host="127.0.0.1", password='streams')
 
 
 def cve_relate_nodes(cve_id, deep):
