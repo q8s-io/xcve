@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Tutorial Demo</title>
+</head>
+
+<body>
+    <div id="mountNode"></div>
+    <script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.g6-3.1.0/build/g6.js"></script>
+    <script>
+        const initData = { "nodes": [{ "id": 344123, "label": "CVE-1999-0130", "class": "CVE", "x": 350, "y": 400 }, { "id": 252156, "label": "linux:4.0", "class": "Proversion", "x": 350, "y": 600 }, { "id": 6408, "label": "linux", "class": "Product", "x": 380.5298568437749, "y": 597.6560847560697 }, { "id": 252071, "label": "aix:4.2", "class": "Proversion", "x": 410.3441197190385, "y": 590.6792784109862 }, { "id": 10120, "label": "aix", "class": "Product", "x": 438.74396757339196, "y": 579.2331113922112 }, { "id": 252211, "label": "hp-ux:10.00", "class": "Proversion", "x": 465.06373204372414, "y": 563.5858721533435 }, { "id": 9432, "label": "hp-ux", "class": "Product", "x": 488.6865001584483, "y": 544.1043187201574 }, { "id": 252254, "label": "hp-ux:10.10", "class": "Proversion", "x": 509.05857425468525, "y": 521.2450821933276 }, { "id": 1274, "label": "freebsd", "class": "Product", "x": 525.7024501821885, "y": 495.54396370245263 }, { "id": 1273, "label": "freebsd", "class": "Vendor", "x": 538.2280095959123, "y": 467.6033756817005 }, { "id": 252256, "label": "hp-ux:10.20", "class": "Proversion", "x": 546.341663999371, "y": 438.0782218329337 }, { "id": 252348, "label": "sendmail:8.8.2", "class": "Proversion", "x": 549.853236210162, "y": 407.6605467380071 }, { "id": 15263, "label": "sendmail", "class": "Product", "x": 548.680417951935, "y": 377.06331492031995 }, { "id": 9117, "label": "hp", "class": "Vendor", "x": 542.8506990906283, "y": 347.0036995606677 }, { "id": 344372, "label": "metainfo", "class": "Vendor", "x": 532.50072329531, "y": 318.186272565732 }, { "id": 5533, "label": "redhat", "class": "Vendor", "x": 517.87308522639, "y": 291.28648999975576 }, { "id": 15262, "label": "sendmail", "class": "Vendor", "x": 499.3106443223926, "y": 266.93485996688696 }, { "id": 252345, "label": "eric_allman", "class": "Vendor", "x": 477.248488465312, "y": 245.70216403561142 }, { "id": 252061, "label": "hp-ux:10.01", "class": "Proversion", "x": 452.2037358894221, "y": 228.08607860255975 }, { "id": 252346, "label": "sendmail:8.8", "class": "Proversion", "x": 424.7634143681538, "y": 214.49950977958108 }, { "id": 344124, "label": "network_desktop", "class": "Product", "x": 395.57070178062753, "y": 205.2609152244442 }, { "id": 130446, "label": "caldera", "class": "Vendor", "x": 365.3098505672992, "y": 200.5868397632519 }, { "id": 252347, "label": "sendmail:8.8.1", "class": "Proversion", "x": 334.6901494327009, "y": 200.5868397632519 }, { "id": 419, "label": "ibm", "class": "Vendor", "x": 304.4292982193726, "y": 205.26091522444418 }, { "id": 344126, "label": "sendmail:8.7", "class": "Proversion", "x": 275.2365856318463, "y": 214.49950977958105 }, { "id": 344306, "label": "yggdrasil", "class": "Vendor", "x": 247.79626411057797, "y": 228.08607860255975 }, { "id": 26453, "label": "corel", "class": "Vendor", "x": 222.751511534688, "y": 245.70216403561142 }, { "id": 344559, "label": "cyrix", "class": "Vendor", "x": 200.6893556776075, "y": 266.93485996688696 }, { "id": 348695, "label": "listmanager", "class": "Vendor", "x": 182.12691477361008, "y": 291.2864899997557 }, { "id": 35880, "label": "gentoo", "class": "Vendor", "x": 167.49927670469003, "y": 318.186272565732 }, { "id": 268140, "label": "rpath", "class": "Vendor", "x": 157.1493009093718, "y": 347.0036995606677 }, { "id": 252942, "label": "conectiva", "class": "Vendor", "x": 151.319582048065, "y": 377.06331492031984 }, { "id": 6407, "label": "ubuntu", "class": "Vendor", "x": 150.146763789838, "y": 407.66054673800704 }, { "id": 8196, "label": "oracle", "class": "Vendor", "x": 153.65833600062902, "y": 438.0782218329337 }, { "id": 12765, "label": "mandriva", "class": "Vendor", "x": 161.77199040408766, "y": 467.6033756817005 }, { "id": 344, "label": "sun", "class": "Vendor", "x": 174.29754981781153, "y": 495.54396370245263 }, { "id": 252152, "label": "bsd_os:2.1", "class": "Proversion", "x": 190.94142574531466, "y": 521.2450821933276 }, { "id": 252149, "label": "bsd_os", "class": "Product", "x": 211.31349984155165, "y": 544.1043187201574 }, { "id": 252148, "label": "bsdi", "class": "Vendor", "x": 234.9362679562759, "y": 563.5858721533435 }, { "id": 344125, "label": "network_desktop:1.0", "class": "Proversion", "x": 261.256032426608, "y": 579.2331113922111 }, { "id": 82400, "label": "freebsd:2.1.6", "class": "Proversion", "x": 289.6558802809615, "y": 590.6792784109862 }, { "id": 82399, "label": "freebsd:2.1.5", "class": "Proversion", "x": 319.470143156225, "y": 597.6560847560697 }], "edges": [{ "source": "344123", "target": "252156", "label": "EFFECT", "weight": 2 }, { "source": "6408", "target": "252156", "label": "FORK", "weight": 2 }, { "source": "344123", "target": "252071", "label": "EFFECT", "weight": 2 }, { "source": "10120", "target": "252071", "label": "FORK", "weight": 2 }, { "source": "344123", "target": "252211", "label": "EFFECT", "weight": 2 }, { "source": "9432", "target": "252211", "label": "FORK", "weight": 2 }, { "source": "344123", "target": "252254", "label": "EFFECT", "weight": 2 }, { "source": "9432", "target": "252254", "label": "FORK", "weight": 2 }, { "source": "344123", "target": "1274", "label": "EFFECT", "weight": 2 }, { "source": "1273", "target": "1274", "label": "PRODUCE", "weight": 2 }, { "source": "344123", "target": "252256", "label": "EFFECT", "weight": 2 }, { "source": "9432", "target": "252256", "label": "FORK", "weight": 2 }, { "source": "344123", "target": "252348", "label": "EFFECT", "weight": 2 }, { "source": "15263", "target": "252348", "label": "FORK", "weight": 2 }, { "source": "344123", "target": "15263", "label": "EFFECT", "weight": 2 }, { "source": "9117", "target": "15263", "label": "PRODUCE", "weight": 2 }, { "source": "344123", "target": "15263", "label": "EFFECT", "weight": 2 }, { "source": "344372", "target": "15263", "label": "PRODUCE", "weight": 2 }, { "source": "344123", "target": "15263", "label": "EFFECT", "weight": 2 }, { "source": "5533", "target": "15263", "label": "PRODUCE", "weight": 2 }, { "source": "344123", "target": "15263", "label": "EFFECT", "weight": 2 }, { "source": "15262", "target": "15263", "label": "PRODUCE", "weight": 2 }, { "source": "344123", "target": "15263", "label": "EFFECT", "weight": 2 }, { "source": "252345", "target": "15263", "label": "PRODUCE", "weight": 2 }, { "source": "344123", "target": "252061", "label": "EFFECT", "weight": 2 }, { "source": "9432", "target": "252061", "label": "FORK", "weight": 2 }, { "source": "344123", "target": "252346", "label": "EFFECT", "weight": 2 }, { "source": "15263", "target": "252346", "label": "FORK", "weight": 2 }, { "source": "344123", "target": "344124", "label": "EFFECT", "weight": 2 }, { "source": "130446", "target": "344124", "label": "PRODUCE", "weight": 2 }, { "source": "344123", "target": "252347", "label": "EFFECT", "weight": 2 }, { "source": "15263", "target": "252347", "label": "FORK", "weight": 2 }, { "source": "344123", "target": "9432", "label": "EFFECT", "weight": 2 }, { "source": "9117", "target": "9432", "label": "PRODUCE", "weight": 2 }, { "source": "344123", "target": "10120", "label": "EFFECT", "weight": 2 }, { "source": "419", "target": "10120", "label": "PRODUCE", "weight": 2 }, { "source": "344123", "target": "344126", "label": "EFFECT", "weight": 2 }, { "source": "15263", "target": "344126", "label": "FORK", "weight": 2 }, { "source": "344123", "target": "6408", "label": "EFFECT", "weight": 2 }, { "source": "344306", "target": "6408", "label": "PRODUCE", "weight": 2 }, { "source": "344123", "target": "6408", "label": "EFFECT", "weight": 2 }, { "source": "26453", "target": "6408", "label": "PRODUCE", "weight": 2 }, { "source": "344123", "target": "6408", "label": "EFFECT", "weight": 2 }, { "source": "344559", "target": "6408", "label": "PRODUCE", "weight": 2 }, { "source": "344123", "target": "6408", "label": "EFFECT", "weight": 2 }, { "source": "348695", "target": "6408", "label": "PRODUCE", "weight": 2 }, { "source": "344123", "target": "6408", "label": "EFFECT", "weight": 2 }, { "source": "35880", "target": "6408", "label": "PRODUCE", "weight": 2 }, { "source": "344123", "target": "6408", "label": "EFFECT", "weight": 2 }, { "source": "268140", "target": "6408", "label": "PRODUCE", "weight": 2 }, { "source": "344123", "target": "6408", "label": "EFFECT", "weight": 2 }, { "source": "252942", "target": "6408", "label": "PRODUCE", "weight": 2 }, { "source": "344123", "target": "6408", "label": "EFFECT", "weight": 2 }, { "source": "6407", "target": "6408", "label": "PRODUCE", "weight": 2 }, { "source": "344123", "target": "6408", "label": "EFFECT", "weight": 2 }, { "source": "5533", "target": "6408", "label": "PRODUCE", "weight": 2 }, { "source": "344123", "target": "6408", "label": "EFFECT", "weight": 2 }, { "source": "8196", "target": "6408", "label": "PRODUCE", "weight": 2 }, { "source": "344123", "target": "6408", "label": "EFFECT", "weight": 2 }, { "source": "12765", "target": "6408", "label": "PRODUCE", "weight": 2 }, { "source": "344123", "target": "6408", "label": "EFFECT", "weight": 2 }, { "source": "344", "target": "6408", "label": "PRODUCE", "weight": 2 }, { "source": "344123", "target": "252152", "label": "EFFECT", "weight": 2 }, { "source": "252149", "target": "252152", "label": "FORK", "weight": 2 }, { "source": "344123", "target": "252149", "label": "EFFECT", "weight": 2 }, { "source": "252148", "target": "252149", "label": "PRODUCE", "weight": 2 }, { "source": "344123", "target": "344125", "label": "EFFECT", "weight": 2 }, { "source": "344124", "target": "344125", "label": "FORK", "weight": 2 }, { "source": "344123", "target": "82400", "label": "EFFECT", "weight": 2 }, { "source": "1274", "target": "82400", "label": "FORK", "weight": 2 }, { "source": "344123", "target": "82399", "label": "EFFECT", "weight": 2 }, { "source": "1274", "target": "82399", "label": "FORK", "weight": 2 }] };
+    </script>
+    <script>
+        const graph = new G6.Graph({
+            container: 'mountNode',
+            width: 800,
+            height: 600,
+            // 节点默认配置
+            defaultNode: {
+                size: 60,
+                labelCfg: {
+                    style: {
+                        fill: '#fff',
+                    },
+                },
+            },
+            // 边默认配置
+            defaultEdge: {
+                labelCfg: {
+                    autoRotate: true,
+                },
+            },
+            // 节点在各状态下的样式
+            nodeStateStyles: {
+                // hover 状态为 true 时的样式
+                hover: {
+                    fill: 'lightsteelblue',
+                },
+                // click 状态为 true 时的样式
+                click: {
+                    stroke: '#000',
+                    lineWidth: 3,
+                },
+            },
+            // 边在各状态下的样式
+            edgeStateStyles: {
+                // click 状态为 true 时的样式
+                click: {
+                    stroke: 'steelblue',
+                },
+            },
+            // 布局
+            layout: {
+                type: 'force',
+                linkDistance: 200,
+                preventOverlap: true,
+                nodeStrength: -100,
+                edgeStrength: 0.1,
+            },
+            // 内置交互
+            // modes: {
+            //     default: ['drag-canvas', 'zoom-canvas'],
+            // },
+        });
+
+        const main = async () => {
+            // const response = await fetch(
+            //     'https://gw.alipayobjects.com/os/basement_prod/6cae02ab-4c29-44b2-b1fd-4005688febcb.json',
+            // );
+            // const remoteData = await response.json();
+            
+            const remoteData = initData;
+            const nodes = remoteData.nodes;
+            const edges = remoteData.edges;
+            nodes.forEach(node => {
+                if (!node.style) {
+                    node.style = {};
+                }
+                node.style.lineWidth = 1;
+                node.style.stroke = '#003300';
+                node.style.fill = 'steelblue';
+                switch (node.class) {
+                    case 'c0': {
+                        node.shape = 'circle';
+                        node.size = 60;
+                        break;
+                    }
+                    case 'c1': {
+                        // node.shape = 'rect';
+                        // node.size = [35, 20];
+                        node.shape = 'circle';
+                        node.size = 60;
+                        break;
+                    }
+                    case 'c2': {
+                        // node.shape = 'ellipse';
+                        // node.size = [35, 20];
+                        node.shape = 'circle';
+                        node.size = 40;
+                        break;
+                    }
+                }
+            });
+            edges.forEach(edge => {
+                if (!edge.style) {
+                    edge.style = {};
+                }
+                edge.style.lineWidth = edge.weight;
+                console.log(`edge.weight--${edge.weight}`);
+                edge.style.opacity = 0.6;
+                edge.style.stroke = '#336699';
+            });
+
+            graph.data(remoteData);
+            graph.render();
+
+            // 监听鼠标进入节点
+            graph.on('node:mouseenter', e => {
+                const nodeItem = e.item;
+                // 设置目标节点的 hover 状态 为 true
+                graph.setItemState(nodeItem, 'hover', true);
+            });
+            // 监听鼠标离开节点
+            graph.on('node:mouseleave', e => {
+                const nodeItem = e.item;
+                // 设置目标节点的 hover 状态 false
+                graph.setItemState(nodeItem, 'hover', false);
+            });
+            // 监听鼠标点击节点
+            graph.on('node:click', e => {
+                // 先将所有当前有 click 状态的节点的 click 状态置为 false
+                const clickNodes = graph.findAllByState('node', 'click');
+                clickNodes.forEach(cn => {
+                    graph.setItemState(cn, 'click', false);
+                });
+                const nodeItem = e.item;
+                // 设置目标节点的 click 状态 为 true
+                graph.setItemState(nodeItem, 'click', true);
+            });
+            // 监听鼠标点击节点
+            graph.on('edge:click', e => {
+                // 先将所有当前有 click 状态的边的 click 状态置为 false
+                const clickEdges = graph.findAllByState('edge', 'click');
+                clickEdges.forEach(ce => {
+                    graph.setItemState(ce, 'click', false);
+                });
+                const edgeItem = e.item;
+                // 设置目标边的 click 状态 为 true
+                graph.setItemState(edgeItem, 'click', true);
+            });
+            
+            const forceLayout = graph.get('layoutController').layoutMethod;
+
+            graph.on('node:dragstart', function (e) {
+                graph.layout()
+                refreshDragedNodePosition(e);
+            });
+            graph.on('node:drag', function (e) {
+                forceLayout.execute();
+                refreshDragedNodePosition(e);
+            });
+            graph.on('node:dragend', function (e) {
+                e.item.get('model').fx = null;
+                e.item.get('model').fy = null;
+            });
+        };
+        main();
+
+        function refreshDragedNodePosition(e) {
+            const model = e.item.get('model');
+            model.fx = e.x;
+            model.fy = e.y;
+        }
+    </script>
+</body>
+
+</html>

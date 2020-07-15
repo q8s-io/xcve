@@ -1,0 +1,27 @@
+.common-collapse {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  height:100%;
+  .content {
+    width:100%;
+    flex:1;
+    padding:0;
+  }
+  .icons {
+    display:flex;
+    align-items: center;
+    .ivu-icon {
+      cursor: pointer;
+    }
+  }
+  &.closed{
+    .content {
+      display: none;
+      overflow: hidden;
+    }
+  }
+  &.left {
+    flex-direction: row-reverse;
+  }
+}
