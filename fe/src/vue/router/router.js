@@ -7,11 +7,11 @@ import Search from "@views/Search";
 const routers = [
   {
     path: "/",
-    redirect: "/index",
+    redirect: "/",
     component: Index,
     children: [
       {
-        path: "/index",
+        path: "/",
         name: "index",
         component: Main
       },
