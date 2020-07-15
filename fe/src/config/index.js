@@ -1,7 +1,7 @@
 /**
  * 请求前缀
  */
-export const prefix = "/v1";
+export const prefix = "";
 
 export const VUE_APP_API_SERVER = "http://10.16.111.184:17213";
 
