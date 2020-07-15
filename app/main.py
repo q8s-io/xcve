@@ -8,6 +8,7 @@ from py2neo.data import Node, Relationship
 from enum import Enum
 from pydantic import BaseModel
 from typing import Set
+from itertools import groupby
 import json
 
 app = FastAPI()
@@ -52,7 +53,6 @@ def cve_relate_nodes_v3(cve_id, deep):
         # make nodes
         def append_nodes(n):
             if n.identity not in nodes:
-                print(n._labels)
                 nodes[n.identity] = {
                             "id": n.identity,
                             "label": n.get('name', 'N/A'),
@@ -123,16 +123,16 @@ def random():
 async def frontconf():
     return {
         "graph": {
-            "product": {
+            "Product": {
                 "color": "#6699CC",
             },
-            "cve": {
-                "color": "##99CCFF",
+            "CVE": {
+                "color": "#99CCFF",
             },
-            "vendor": {
+            "Vendor": {
                 "color": "#66CCCC",
             },
-            "proversion": {
+            "Proversion": {
                 "color": "#FFCCCC",
             }
         }
@@ -201,6 +201,11 @@ async def scann_cve(
         raise HTTPException(status_code=404, detail="No cve_id specified!")
     cve = graph.run('match (cve:CVE) where cve.name="{}" return cve'.format(cve_id)).data()[0]
     cve['relations'] = cve_relate_nodes_v3(cve_id, deep)
+    cve['counts'] = []
+    sortednodes = sorted(cve['relations'].get('nodes', []), key=lambda x: x.get('class', ''))
+    for k, g in groupby(sortednodes, lambda x: x.get('class', '')):
+        glen = len(list(g))
+        cve['counts'].append({k: glen})
     return {cve_id: cve}
 
 
