@@ -34,3 +34,20 @@ services:
       - "8099:8099"
     depends_on:
       - neo4j
+  fe:
+    image: nginx:1.18
+    hostname: xcve-fe
+    container_name: xcve-fe
+    network_mode: "host"
+    volumes:
+      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./log/nginx/logs:/var/log/nginx
+      - ./public:/usr/share/nginx/html
+    ports:
+      - "8098:8098"
+    environment:
+      - NGINX_HOST=localhost
+      - NGINX_PORT=8098
+    depends_on:
+      - web
+    command: [nginx-debug, '-g', 'daemon off;']
