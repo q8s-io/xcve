@@ -26,60 +26,13 @@ app.add_middleware(
 graph = Graph(host="127.0.0.1", password='streams')
 
 
-def cve_relate_nodes(cve_id, deep):
+def related_nodes(rootid, deep=1):
     '''
     i.get('x').identity  # node's ID
     i.get('x').labels  # node's labels as list
     i.get('x')['name']  # value of name in node
     i.get('r').__class__.__name__  # relation's name
     '''
-    ret = {}
-    relations = graph.run('match (cve:CVE)-[r]->(x) where cve.name="{}" return r,x'.format(cve_id)).data()
-    for i in relations:
-        rlname = i.get('r').__class__.__name__
-        if not rlname in ret:
-            ret[rlname] = []
-        x = dict(i.get('x'))
-        x['label'] = str(i.get('x').labels)
-        ret[rlname].append(x)
-    return ret
-
-def cve_relate_nodes_v3(cve_id, deep):
-    nodes = {}
-    edges = []
-    relations = graph.run('match (cve:CVE)-[r1]->(x)<-[r2:FORK|PRODUCE]-(y) where cve.name="{}" return cve, r1, x, r2, y'.format(cve_id)).data()
-    # cve--r1--> x <--r2--y
-    for i in relations:
-        # make nodes
-        def append_nodes(n):
-            if n.identity not in nodes:
-                nodes[n.identity] = {
-                            "id": n.identity,
-                            "label": n.get('name', 'N/A'),
-                            "class": list(n._labels)[0],
-                        }
-        append_nodes(i.get('cve')) # cve_id => cve ID
-        append_nodes(i.get('x'))
-        append_nodes(i.get('y'))
-        # make edges
-        def append_edges(s, label, t):
-            edges.append({
-                    "source": s,
-                    "target": t,
-                    "label": label,
-                    # weight: 2
-                })
-        append_edges(i.get('cve').identity, i.get('r1').__class__.__name__, i.get('x').identity)
-        append_edges(i.get('y').identity, i.get('r2').__class__.__name__, i.get('x').identity)
-    nodes = list(nodes.values())
-    ret = {
-        "nodes": nodes,
-        "edges": edges,
-    }
-    return ret
-
-
-def related_nodes(rootid, deep=1):
     nodes = {}
     edges = []
     paths = graph.run('match p=(root)-[*{}]-() where ID(root)={} return p'.format(deep, rootid)).data()
@@ -193,10 +146,10 @@ class CateName(str, Enum):
     product = "Product"
     proversion = "Proversion"
     cve = "CVE"
-    unknown = "unknown"
+    unknown = "Unknown"
 @app.get("/search",
     summary="搜索关键字",
-    description="如果是某种类型的搜索，会精准匹配。默认类型搜索的是product，模糊匹配",
+    description="如果是某种类型的搜索，会精准匹配。",
 )
 async def search(
     deep: int = Query(
@@ -215,6 +168,6 @@ async def search(
         max_length=50,
         )
     ):
-    if cate == "unknown":
+    if cate == "Unknown":
         raise HTTPException(status_code=404, detail="Please specify the cate!")
     return neo4j_strict_match(cate, keyword, deep)
