@@ -8,7 +8,7 @@
         <slot></slot>
       </Content>
       <Footer>
-        About
+        Copyright©2020 Vulntotal Team All Rights Reserved
       </Footer>
     </Layout>
   </Layout>
