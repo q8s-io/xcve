@@ -127,40 +127,29 @@ def count_nodes(nodes):
     return ret
 
 
-def cve_relate_nodes_v2(cve_id, deep):
-    nodes = {}
-    edges = {}
-    relations = graph.run('match (cve:CVE)-[r]->(x)<-[s:EFFECT]-(y) where cve.name="{}" return r,x, s, y'.format(cve_id)).data()
-    for i in relations:
-        # make nodes
-        def append_nodes(n):
-            if n.identity not in nodes:
-                nodes[n.identity] = {
-                            "id": n.identity,
-                            "label": n.get('name', 'N/A'),
-                            "class": n.labels,
-                        }
-        append_nodes(i.get('x'))
-        append_nodes(i.get('y'))
-        # make edges
-        def append_edges(s, label, t):
-            edges.append({
-                    "source": s,
-                    "target": t,
-                    "label": label,
-                    # weight: 2
-                })
-        append_edges(root, 'EFFECT', i.get('x').identity)
-        append_edges(i.get('y').identity, 'EFFECT', i.get('x').identity)
-    nodes = list(nodes.values())
-    return ret
-
-
-@app.get("/")
-@app.get("/random")
+@app.get("/random",
+    summary="随机实体",
+    description="随机生成若干个实体，一般用在首页的搜索建议",
+)
 def random():
-    ret = graph.run('match (cve:CVE) with cve, rand() as number return cve order by number limit 10').data()
-    return ret
+    ret = graph.run('match (n) with n, rand() as number return n order by number limit 10').data()
+    return [{'class': list(i.get('n')._labels)[0], 'name':i.get('n').get('name', '')} for i in ret]
+
+
+@app.get("/sug",
+    summary="猜想",
+    description="根据传入的参数，猜想用户想搜的关键字",
+)
+async def sug(
+    prefix: str = Query(
+        None,
+        description="以此参数为前缀，猜想出相关的实体。实体类型可能是CVE、Product、Vendor",
+        max_length=50,
+        )
+    ):
+    ret = graph.run('match (n) where (n:CVE OR n:Product OR n:Vendor) AND toLower(n.name) starts with "{}" return n limit 10'.format(prefix)).data()
+    return sorted([{'class': list(i.get('n')._labels)[0], 'name':i.get('n').get('name', '')} for i in ret],
+                key=lambda x: x.get('class', ''))
 
 
 @app.get("/frontconf",
@@ -184,6 +173,19 @@ async def frontconf():
             }
         }
     }
+
+
+def neo4j_strict_match(label, name, deep=1):
+    if not name:
+        return None
+    ret = graph.run('match (meta:{}) where meta.name="{}" return meta'.format(label, name)).data()
+    if not ret:
+        raise HTTPException(status_code=404, detail="{}:{} not found!".format(label, name))
+    ret = ret[0]
+    if deep > 0:
+        ret['relations'] = related_nodes(ret.get('meta').identity, deep)
+        ret['counts'] = count_nodes(ret['relations'].get('nodes', []))
+    return {name: ret}
 
 
 class CateName(str, Enum):
@@ -216,100 +218,3 @@ async def search(
     if cate == "unknown":
         raise HTTPException(status_code=404, detail="Please specify the cate!")
     return neo4j_strict_match(cate, keyword, deep)
-
-
-@app.get("/sug",
-    summary="猜想",
-    description="根据传入的参数，猜想用户想搜的关键字",
-)
-async def sug(
-    prefix: str = Query(
-        None,
-        description="以此参数为前缀，猜想出相关的实体。实体类型可能是：CVE",
-        max_length=50,
-        )
-    ):
-    # keys = graph.run('match (x:Vendor) where x.name starts with "{}" return x limit 5 union match (x:Product) where x.name starts with "{}" return x limit 5'.format(prefix, prefix)).data()
-    keys = graph.run('match (x:CVE) with x, rand() as number where toLower(x.name) starts with toLower("{}") return x order by number limit 5'.format(prefix, prefix)).data()
-    return [i.get('x').get('name') for i in keys]
-
-
-@app.get("/cve",
-    summary="cve搜索",
-    description="精准匹配cve编号",
-)
-async def scann_cve(
-    deep: int = Query(
-        1,
-        description="图的遍历深度",
-        le = 3,
-        ge = 1,
-        ),
-    cve_id: str = Query(
-        None,
-        description="精确的cve编号，如CVE-2000-0981",
-        max_length=50,
-        )
-    ):
-    if not cve_id:
-        raise HTTPException(status_code=404, detail="No cve_id specified!")
-    cve = graph.run('match (cve:CVE) where cve.name="{}" return cve'.format(cve_id)).data()[0]
-    cve['relations'] = cve_relate_nodes_v3(cve_id, deep)
-    cve['counts'] = []
-    sortednodes = sorted(cve['relations'].get('nodes', []), key=lambda x: x.get('class', ''))
-    for k, g in groupby(sortednodes, lambda x: x.get('class', '')):
-        glen = len(list(g))
-        cve['counts'].append({k: glen})
-    return {cve_id: cve}
-
-
-def neo4j_strict_match(label, name, deep=1):
-    if not name:
-        return None
-    ret = graph.run('match (meta:{}) where meta.name="{}" return meta'.format(label, name)).data()
-    if not ret:
-        raise HTTPException(status_code=404, detail="{}:{} not found!".format(label, name))
-    ret = ret[0]
-    if deep > 0:
-        ret['relations'] = related_nodes(ret.get('meta').identity, deep)
-        ret['counts'] = count_nodes(ret['relations'].get('nodes', []))
-    return {name: ret}
-
-
-@app.get("/vendor",
-    summary="vendor厂商搜索",
-    description="精准匹配厂商名字",
-)
-async def search_vendor(vendor_name: str= Query(
-        None,
-        description="厂商，如mysql",
-        max_length=50,
-        )
-    ):
-    if not vendor_name:
-        raise HTTPException(status_code=404, detail="No vendor_name specified!")
-    vendor = graph.run('match (vendor:Vendor) where vendor.name="{}" return vendor'.format(vendor_name)).data()
-    if not vendor:
-        raise HTTPException(status_code=404, detail="vendor_name:{} not found!".format(vendor_name))
-    vendor = vendor[0]
-    vendor['relations'] = related_nodes(vendor.get('vendor').identity, 1)
-    vendor['counts'] = count_nodes(vendor['relations'].get('nodes', []))
-    return {vendor_name: vendor}
-
-
-@app.get("/product",
-    summary="product产品搜索",
-    description="精准匹配产品名字",
-)
-async def search_product(product_name: str= Query(
-        None,
-        description="产品名字，如linux",
-        max_length=50,
-        )
-    ):
-    return neo4j_strict_match("Product", product_name)
-
-
-@app.get("/proversion/{proversion_name}")
-async def proversion(proversion_name: str):
-    return neo4j_strict_match("Product", product_name)
