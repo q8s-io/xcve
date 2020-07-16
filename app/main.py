@@ -4,7 +4,7 @@
 from fastapi import FastAPI, Form, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from py2neo import Graph
-from py2neo.data import Node, Relationship
+from py2neo.data import Node, Relationship, walk
 from enum import Enum
 from pydantic import BaseModel
 from typing import Set
@@ -79,6 +79,54 @@ def cve_relate_nodes_v3(cve_id, deep):
     return ret
 
 
+def related_nodes(rootid, deep=1):
+    nodes = {}
+    edges = []
+    paths = graph.run('match p=(root)-[*{}]-() where ID(root)={} return p'.format(deep, rootid)).data()
+
+    # paths is a set of path like : a-[r]->(b)
+    for path in paths:
+        for x in walk(path.get('p')):
+            # x1 is node a
+            # x2 is relation r
+            # x3 is node b
+            if issubclass(type(x), Node):
+                n = x # x is node
+
+            if issubclass(type(x), Relationship):
+                def append_nodes(n):
+                    if n.identity not in nodes:
+                        nodes[n.identity] = {
+                                    "id": n.identity,
+                                    "label": n.get('name', 'N/A'),
+                                    "class": list(n._labels)[0],
+                                }
+                append_nodes(x.start_node)
+                append_nodes(x.end_node)
+                def append_edges(s, label, t):
+                    edges.append({
+                            "source": s,
+                            "target": t,
+                            "label": label,
+                        })
+                append_edges(x.start_node.identity, x.__class__.__name__, x.end_node.identity)
+    nodes = list(nodes.values())
+    ret = {
+        "nodes": nodes,
+        "edges": edges,
+    }
+    return ret
+
+
+def count_nodes(nodes):
+    ret = []
+    sortednodes = sorted(nodes, key=lambda x: x.get('class', ''))
+    for k, g in groupby(sortednodes, lambda x: x.get('class', '')):
+        glen = len(list(g))
+        ret.append({k: glen})
+    return ret
+
+
 def cve_relate_nodes_v2(cve_id, deep):
     nodes = {}
     edges = {}
@@ -105,7 +153,6 @@ def cve_relate_nodes_v2(cve_id, deep):
         append_edges(root, 'EFFECT', i.get('x').identity)
         append_edges(i.get('y').identity, 'EFFECT', i.get('x').identity)
     nodes = list(nodes.values())
-    print(nodes)
     return ret
 
 
@@ -138,30 +185,37 @@ async def frontconf():
         }
     }
 
-class Item(BaseModel):
-    tax: float = None
-    cves: Set[dict] = []
-class TypeName(str, Enum):
-    vendor = "vendor"
-    product = "product"
-    proversion = "proversion"
+
+class CateName(str, Enum):
+    vendor = "Vendor"
+    product = "Product"
+    proversion = "Proversion"
+    cve = "CVE"
+    unknown = "unknown"
 @app.get("/search",
-    response_model=Item,
     summary="搜索关键字",
     description="如果是某种类型的搜索，会精准匹配。默认类型搜索的是product，模糊匹配",
 )
 async def search(
-    cate: TypeName = Query(
-        None,
+    deep: int = Query(
+        1,
+        description="图的遍历深度",
+        le = 3,
+        ge = 1,
+        ),
+    cate: CateName = Query(
+        "CVE",
         description="搜索的类型",
         ),
     keyword: str = Query(
         None,
         description="关键字",
-        max_length=20,
+        max_length=50,
         )
     ):
-    return {"yourkey": keyword}
+    if cate == "unknown":
+        raise HTTPException(status_code=404, detail="Please specify the cate!")
+    return neo4j_strict_match(cate, keyword, deep)
 
 
 @app.get("/sug",
@@ -209,21 +263,53 @@ async def scann_cve(
     return {cve_id: cve}
 
 
-@app.get("/vendor/{vendor_name}")
-def search_vendor(vendor_name: str):
-    return {"vendor_name": vendor_name}
+def neo4j_strict_match(label, name, deep=1):
+    if not name:
+        return None
+    ret = graph.run('match (meta:{}) where meta.name="{}" return meta'.format(label, name)).data()
+    if not ret:
+        raise HTTPException(status_code=404, detail="{}:{} not found!".format(label, name))
+    ret = ret[0]
+    if deep > 0:
+        ret['relations'] = related_nodes(ret.get('meta').identity, deep)
+        ret['counts'] = count_nodes(ret['relations'].get('nodes', []))
+    return {name: ret}
 
 
-@app.get("/product/{product_name}")
-def search_product(product_name: str):
-    # abs search by product
-    return {"product_name": product_name}
+@app.get("/vendor",
+    summary="vendor厂商搜索",
+    description="精准匹配厂商名字",
+)
+async def search_vendor(vendor_name: str= Query(
+        None,
+        description="厂商，如mysql",
+        max_length=50,
+        )
+    ):
+    if not vendor_name:
+        raise HTTPException(status_code=404, detail="No vendor_name specified!")
+    vendor = graph.run('match (vendor:Vendor) where vendor.name="{}" return vendor'.format(vendor_name)).data()
+    if not vendor:
+        raise HTTPException(status_code=404, detail="vendor_name:{} not found!".format(vendor_name))
+    vendor = vendor[0]
+    vendor['relations'] = related_nodes(vendor.get('vendor').identity, 1)
+    vendor['counts'] = count_nodes(vendor['relations'].get('nodes', []))
+    return {vendor_name: vendor}
+
+
+@app.get("/product",
+    summary="product产品搜索",
+    description="精准匹配产品名字",
+)
+async def search_product(product_name: str= Query(
+        None,
+        description="产品名字，如linux",
+        max_length=50,
+        )
+    ):
+    return neo4j_strict_match("Product", product_name)
 
 
 @app.get("/proversion/{proversion_name}")
-def proversion(proversion_name: str):
-    # match procut-version
-    if not proversion_name:
-        raise HTTPException(status_code=404, detail="No proversion_name specified!")
-    cves = graph.run('match (cve:CVE)-->(pv) where pv.name="{}" return cve;'.format(proversion_name)).data()
-    return cves
+async def proversion(proversion_name: str):
+    return neo4j_strict_match("Product", product_name)
