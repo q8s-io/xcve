@@ -1,0 +1,6 @@
+FROM node
+WORKDIR /opt/app
+
+COPY ./fe /opt/app
+
+RUN yarn && npm run build && mkdir -p /opt/html && mv /opt/public/* /opt/html/
