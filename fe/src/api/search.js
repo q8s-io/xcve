@@ -5,7 +5,7 @@ import { get } from "@/helper/http/index.js";
  * 获取随机实体
  */
 export const getRandom = params => {
-  return get(`/random`, params);
+  return get(`/sug`, params);
 };
 
 /*

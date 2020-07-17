@@ -9,10 +9,11 @@
           @keyup.enter.native="onSearch"
           @on-search="handleSearch"
           @on-select="onSelect"
+          @on-focus="onFocus"
           v-model="keyword"
           class="ipt"
         >
-          <i-option v-for="(item,index) in dataList" :value="JSON.stringify(item)" :key="index">{{ item.name }}(<span :style="`color: ${conf[item.class].color };font-weight:bold;`">{{item.class}}</span>)</i-option>
+          <i-option v-for="(item,index) in dataList" :value="index" :key="index"><span :style="`color: ${conf[item.class].color };`">{{item.name}}</span></i-option>
           <bi-icon type="md-search" slot="prefix" />
         </bi-auto-complete>
 
@@ -21,7 +22,7 @@
         </bi-button>
       </div>
     </div>
-    <div class="content">
+    <div class="content" v-show="detail.errorcode ==0 ">
       <div class="maps" ref="maps">
         <div class="graph">
           <h3>Relation</h3>
@@ -46,13 +47,18 @@
         </div>
       </div>
     </div>
+    <div class="no-result" v-show="detail.errorcode !== 0 ">
+      <div class="icon">
+      </div>
+      <p>Fetching data...</p>
+    </div>
   </div>
 </template>
 
 <script>
 import "./index.less";
 // import G6 from "@antv/g6";
-import { getSuggest, getDetail, getConf } from "@api/search.js";
+import { getSuggest, getDetail, getConf, getRandom } from "@api/search.js";
 export default {
   name: "search-index",
   components: {},
@@ -91,14 +97,18 @@ export default {
         nodes: [],
         edges: []
       },
-      detail: {},
-      conf: {}
+      detail: {
+        errorcode: 0
+      },
+      conf: {},
+      entities:[]
     };
   },
   computed: {},
   methods: {
     async init() {
       await this.getConf();
+      await this.getRandomData();
       await this.getDetailData();
       this.initGraph();
     },
@@ -269,11 +279,11 @@ export default {
         this.drawGraph();
       });
     },
-    onSearch() {
+    async onSearch() {
       this.entryName = this.keyword;
       //console.log(this.entryName);
+      await this.getDetailData();
       this.init();
-      this.drawGraph();
       this.$forceUpdate();
     },
     handleSearch(value) {
@@ -283,11 +293,19 @@ export default {
         this.dataList = ret;
       });
     },
-    onSelect(item) {
-      let ret = JSON.parse(item);
-      this.keyword = ret.name;
-      this.type = ret.class;
-      this.onSearch();
+    onSelect(i) {
+      setTimeout(() => {
+        let ret = this.dataList[i];
+        this.keyword = ret.name;
+        this.type = ret.class;
+        this.onSearch();
+      }, 0);
+    },
+    onFocus() {
+      console.log(this.keyword);
+      if(this.keyword === '') {
+        this.dataList = this.entities;
+      }
     },
     /**
      * 计算N个点均匀排列成圆的各个点坐标
@@ -363,7 +381,11 @@ export default {
           });
         }
       }
-    }
+    },
+    async getRandomData() {
+      let ret = await getRandom();
+      this.entities = ret;
+    },
   },
   beforeMount() {
     this.keyword = this.$route.query.keyword;
