@@ -47,9 +47,17 @@ module.exports = {
   devServer: {
     port: 8111,
     proxy: {
-      "/api": {
-        target: "http://i6985.se.shbt.qihoo.net:1180",
-        pathRewrite: { "^/api": "" }
+      "/frontconf": {
+        target: "http://106.75.36.195:8099",
+      },
+      "/sug": {
+        target: "http://106.75.36.195:8099",
+      },
+      "/random": {
+        target: "http://106.75.36.195:8099",
+      },
+      "/search": {
+        target: "http://106.75.36.195:8099",
       }
     },
     disableHostCheck: true

@@ -9,10 +9,10 @@
         @keyup.enter.native="onSearch"
         @on-search="handleSearch"
         @on-select="onSelect"
-        :data="dataList"
         v-model="keyword"
         class="ipt"
       >
+      <i-option v-for="(item,index) in dataList" :value="JSON.stringify(item)" :key="index">{{ item.name }}(<span :style="`color: ${conf[item.class].color };font-weight:bold;`">{{item.class}}</span>)</i-option>
         <bi-icon type="md-search" slot="prefix" />
       </bi-auto-complete>
 
@@ -25,26 +25,36 @@
 
 <script>
 import "./index.less";
-import { getSuggest } from "@api/search.js";
+import { getSuggest, getRandom,getConf } from "@api/search.js";
 export default {
   name: "search-index",
   components: {},
   data() {
     return {
-      keyword: "CVE-1999-0130",
-      dataList: []
+      keyword: "",
+      type: "",
+      dataList: [],
+      entities:[]
     };
   },
   computed: {},
   methods: {
     async init() {
-      this.getDetailData();
+      this.getRandomData();
+      this.getConf();
+    },
+    async getConf() {
+      let ret = await getConf();
+      if (ret && ret.graph) {
+        this.conf = ret.graph;
+      }
     },
     onSearch() {
       this.$router.push({
-        path: "/search",
+        path: "/s",
         query: {
-          keyword: this.keyword
+          keyword: this.keyword,
+          type: this.type
         }
       });
     },
@@ -55,9 +65,19 @@ export default {
         this.dataList = ret;
       });
     },
-    onSelect(value) {
-      this.keyword = value;
+    onSelect(item) {
+      let ret = JSON.parse(item);
+      this.keyword = ret.name;
+      this.type = ret.class;
       this.onSearch();
+    },
+    async getRandomData() {
+      let ret = await getRandom();
+      this.entities = ret;
+      let index = Math.floor(Math.random() * this.entities.length);
+      this.keyword = this.entities[index].name;
+      this.type = this.entities[index].class;
+      console.log(this.entities);
     }
   },
   beforeMount() {

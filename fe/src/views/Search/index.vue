@@ -9,10 +9,10 @@
           @keyup.enter.native="onSearch"
           @on-search="handleSearch"
           @on-select="onSelect"
-          :data="dataList"
           v-model="keyword"
           class="ipt"
         >
+          <i-option v-for="(item,index) in dataList" :value="JSON.stringify(item)" :key="index">{{ item.name }}(<span :style="`color: ${conf[item.class].color };font-weight:bold;`">{{item.class}}</span>)</i-option>
           <bi-icon type="md-search" slot="prefix" />
         </bi-auto-complete>
 
@@ -59,6 +59,7 @@ export default {
   data() {
     return {
       keyword: "",
+      type: "",
       dataList: [],
       basicInfo: {
         columns: [
@@ -282,8 +283,10 @@ export default {
         this.dataList = ret;
       });
     },
-    onSelect(value) {
-      this.keyword = value;
+    onSelect(item) {
+      let ret = JSON.parse(item);
+      this.keyword = ret.name;
+      this.type = ret.class;
       this.onSearch();
     },
     /**
@@ -308,16 +311,18 @@ export default {
     },
     async getDetailData() {
       let ret = await getDetail({
-        cve_id: this.keyword
+        deep:1,
+        cate: this.type,
+        keyword: this.keyword
       });
       this.detail = ret;
       this.basicInfo.data = [];
       if (ret && ret[this.keyword]) {
-        for (let key in ret[this.keyword].cve) {
+        for (let key in ret[this.keyword].meta) {
           key &&
             this.basicInfo.data.push({
               key: key,
-              val: ret[this.keyword].cve[key]
+              val: ret[this.keyword].meta[key]
             });
         }
 
@@ -357,13 +362,13 @@ export default {
             item.weight = 2;
           });
         }
-        console.log(JSON.stringify(this.graphData), "====>");
       }
     }
   },
   beforeMount() {
     this.keyword = this.$route.query.keyword;
     this.entryName = this.keyword;
+    this.type = this.$route.query.type || 'Unknown';
   },
   mounted() {
     this.init();

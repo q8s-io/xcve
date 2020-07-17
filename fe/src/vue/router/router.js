@@ -16,8 +16,8 @@ const routers = [
         component: Main
       },
       {
-        path: "/search",
-        name: "search",
+        path: "/s",
+        name: "s",
         component: Search
       }
     ]
