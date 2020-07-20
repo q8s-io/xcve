@@ -82,7 +82,8 @@ def count_nodes(nodes):
 
 def random():
     ret = graph.run('match (n) with n, rand() as number return n order by number limit 10').data()
-    return [{'class': list(i.get('n')._labels)[0], 'name':i.get('n').get('name', '')} for i in ret]
+    return sorted([{'class': list(i.get('n')._labels)[0], 'name':i.get('n').get('name', '')} for i in ret],
+        key=lambda x: x.get('class', ''))
 
 
 @app.get("/sug",
@@ -111,16 +112,16 @@ async def frontconf():
     return {
         "graph": {
             "Product": {
-                "color": "#6699CC",
+                "color": "#407855",
             },
             "CVE": {
-                "color": "#99CCFF",
+                "color": "#CA5010",
             },
             "Vendor": {
-                "color": "#66CCCC",
+                "color": "#0078D4",
             },
             "Proversion": {
-                "color": "#FFCCCC",
+                "color": "#867365",
             }
         }
     }

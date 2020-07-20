@@ -38,6 +38,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.fe
+      network: host
     hostname: xcve-fe
     container_name: xcve-fe
     network_mode: "host"
