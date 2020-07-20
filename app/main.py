@@ -80,10 +80,6 @@ def count_nodes(nodes):
     return ret
 
 
-@app.get("/random",
-    summary="随机实体",
-    description="随机生成若干个实体，一般用在首页的搜索建议",
-)
 def random():
     ret = graph.run('match (n) with n, rand() as number return n order by number limit 10').data()
     return [{'class': list(i.get('n')._labels)[0], 'name':i.get('n').get('name', '')} for i in ret]
@@ -96,10 +92,12 @@ def random():
 async def sug(
     prefix: str = Query(
         None,
-        description="以此参数为前缀，猜想出相关的实体。实体类型可能是CVE、Product、Vendor",
+        description="以此参数为前缀，猜想出相关的实体。如果此参数为空，则随机推荐若干个实体。实体类型可能是CVE、Product、Vendor",
         max_length=50,
         )
     ):
+    if not prefix:
+        return random()
     ret = graph.run('match (n) where (n:CVE OR n:Product OR n:Vendor) AND toLower(n.name) starts with "{}" return n limit 10'.format(prefix)).data()
     return sorted([{'class': list(i.get('n')._labels)[0], 'name':i.get('n').get('name', '')} for i in ret],
                 key=lambda x: x.get('class', ''))
@@ -130,15 +128,15 @@ async def frontconf():
 
 def neo4j_strict_match(label, name, deep=1):
     if not name:
-        return None
+        return {"errorcode": -1, "message": "keyword is NULL!"}
     ret = graph.run('match (meta:{}) where meta.name="{}" return meta'.format(label, name)).data()
     if not ret:
-        raise HTTPException(status_code=404, detail="{}:{} not found!".format(label, name))
+        return {"errorcode": -1, "message": "{}:{} not found!".format(label, name)}
     ret = ret[0]
     if deep > 0:
         ret['relations'] = related_nodes(ret.get('meta').identity, deep)
         ret['counts'] = count_nodes(ret['relations'].get('nodes', []))
-    return {name: ret}
+    return {"errorcode": 0, name: ret}
 
 
 class CateName(str, Enum):
