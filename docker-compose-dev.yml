@@ -6,6 +6,8 @@ services:
     hostname: xcve-neo4j
     container_name: xcve-neo4j
     network_mode: "host"
+    user: root
+    privileged: true
     ports:
       - "7474:7474"
       - "7687:7687"
@@ -21,6 +23,21 @@ services:
     environment:
       NEO4J_AUTH: neo4j/streams
       NEO4J_dbms_logs_debug_level: DEBUG
+      NEO4J_dbms_memory_heap_max__size: 2G
+      NEO4J_kafka_group_id: xcve3
+      NEO4J_kafka_zookeeper_connect: 117.50.109.103:2181
+      NEO4J_kafka_bootstrap_servers: 117.50.109.103:9092
+      NEO4J_kafka_auto_offset_reset: "earliest"
+      NEO4J_streams_source_enabled: "false"
+      NEO4J_streams_sink_enabled: "true"
+      NEO4J_streams_sink_errors_log_enable: "true"
+      NEO4J_streams_sink_errors_include_messages: "true"
+      NEO4J_streams_sink_topic_cypher_image: 
+        "MERGE (i:Image {name: event.data.image_name, status: event.data.task_status, time:event.data.create_time})
+        WITH event, i
+        UNWIND event.data.vuln_data AS cve
+        MERGE (c:CVE {name:cve.cve})
+        MERGE (c)-[:EFFECT]->(i)"
   web:
     hostname: xcve-web
     container_name: xcve-web
