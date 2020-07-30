@@ -99,7 +99,7 @@ async def sug(
     ):
     if not prefix:
         return random()
-    ret = graph.run('match (n) where (n:CVE OR n:Product OR n:Vendor) AND toLower(n.name) starts with "{}" return n limit 10'.format(prefix)).data()
+    ret = graph.run('match (n) WHERE toLower(n.name) starts with "{}" return n limit 10'.format(prefix.lower())).data()
     return sorted([{'class': list(i.get('n')._labels)[0], 'name':i.get('n').get('name', '')} for i in ret],
                 key=lambda x: x.get('class', ''))
 
@@ -122,6 +122,9 @@ async def frontconf():
             },
             "Proversion": {
                 "color": "#867365",
+            },
+            "Image": {
+                "color": "#647687",
             }
         }
     }
@@ -144,6 +147,7 @@ class CateName(str, Enum):
     vendor = "Vendor"
     product = "Product"
     proversion = "Proversion"
+    image = "Image"
     cve = "CVE"
     unknown = "Unknown"
 @app.get("/search",
