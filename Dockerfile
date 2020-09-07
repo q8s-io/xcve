@@ -1,4 +1,4 @@
-FROM /python:3.6
+FROM python:3.6
 WORKDIR /app
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt -i http://pypi.douban.com/simple --trusted-host pypi.douban.com
