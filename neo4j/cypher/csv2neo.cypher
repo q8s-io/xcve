@@ -6,8 +6,8 @@ CREATE CONSTRAINT ON (c:CVE) ASSERT c.name IS UNIQUE;
 
 USING PERIODIC COMMIT 1000
 LOAD CSV WITH HEADERS FROM 'file:///cves.csv' AS line
-CREATE (c:CVE {id: line.id,uuid: line.uuid,name: line.name,comment: line.comment,description: line.description,creation_time: line.creation_time,modification_time: line.modification_time,vector: line.vector,complexity: line.complexity,authentication: line.authentication,confidentiality_impact: line.confidentiality_impact,integrity_impact: line.integrity_impact,availability_impact: line.availability_impact,products: line.products,cvss: line.cvss})
-WITH line, c
+MERGE (c:CVE {name: line.name})
+SET c.id=line.id, c.uuid=line.uuid, c.comment=line.comment, c.description=line.description, c.creation_time=line.creation_time, c.modification_time=line.modification_time, c.vector=line.vector, c.complexity=line.complexity, c.authentication=line.authentication, c.confidentiality_impact=confidentiality_impact, c.integrity_impact=line.integrity_impact, c.availability_impact=line.availability_impact, c.products=line.products, c.cvss=line.cvssWITH line, c
 WHERE line.products <> ""
 WITH split(trim(line.products), ' ') AS products, c
 UNWIND products AS product
