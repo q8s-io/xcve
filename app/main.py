@@ -35,6 +35,7 @@ def related_nodes(rootid, deep=1):
     '''
     nodes = {}
     edges = []
+    names = {}
     paths = graph.run('match p=(root)-[*{}]-() where ID(root)={} return p'.format(deep, rootid)).data()
 
     # paths is a set of path like : a-[r]->(b)
@@ -47,6 +48,17 @@ def related_nodes(rootid, deep=1):
                 n = x # x is node
 
             if issubclass(type(x), Relationship):
+                def judge_node(n):
+                    if list(n._labels)[0] == "Image":
+                        name = n.get('name', 'N/A').split(':')[0]
+                        if names.get(name, 0) < 10:
+                            names[name] = names.get(name, 0)+1
+                       
+                        else:
+                            return False
+                    return True
+                if not judge_node(x.end_node):
+                    continue
                 def append_nodes(n):
                     if n.identity not in nodes:
                         nodes[n.identity] = {
