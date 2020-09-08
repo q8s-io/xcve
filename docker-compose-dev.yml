@@ -47,7 +47,7 @@ services:
       context: .
       network: host
     volumes:
-      - ./app/main.py:/app/main.py
+      - ./app:/app
     ports:
       - "8099:8099"
     depends_on:
