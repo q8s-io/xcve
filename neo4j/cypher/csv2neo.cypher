@@ -14,7 +14,7 @@ UNWIND products AS product
 WITH split(product, ':') AS cpe, c
 MERGE (v:Vendor {name:cpe[2]})
 MERGE (p:Product {name:cpe[3]})
-MERGE (pv:Proversion {name:cpe[3]+':'+coalesce(cpe[4], "Unknown")})
+MERGE (pv:Proversion {name:cpe[3]+'#'+coalesce(cpe[4], "Unknown")})
 WITH c,v,p,pv 
 MERGE (c)-[:EFFECT]->(v)
 MERGE (c)-[:EFFECT]->(p)
