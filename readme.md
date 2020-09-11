@@ -14,11 +14,12 @@ xcve是一个基于cve和一系列相关数据（如nvd、cvss、软硬件、软
 ```bash
 git clone git@github.com:q8s-io/xcve.git
 cd xcve
-docker-compose [-f docker-compose-dev.yml] build
-docker-compose [-f docker-compose-dev.yml] up -d
+docker-compose -f docker-compose-dev.yml build
+docker-compose -f docker-compose-dev.yml up -d
 ```
 
 首次启动，数据库中还没有cve数据，还需将数据导入（导入过程可能花费数个小时。如果不需要完整cve数据可以尝试截断 neo4j/import/cves.csv 为更小的文件，以加快导入速度）：
+(因为cve数据通过lfs保存，所以项目clone前，保证当前环境已安装git lfs）
 ```bash
 docker exec -ti xcve-neo4j bash
 [in container] cypher-shell -u neo4j -p streams -f /app/csv2neo.cypher

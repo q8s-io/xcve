@@ -19,7 +19,7 @@ services:
       - ./neo4j/data:/data
       - ./neo4j/logs:/logs
       - ./neo4j/import:/var/lib/neo4j/import
-      - ./csv2neo.cypher:/app/csv2neo.cypher
+      - ./neo4j/cypher:/app
     environment:
       NEO4J_AUTH: neo4j/streams
       NEO4J_dbms_logs_debug_level: DEBUG
@@ -47,7 +47,7 @@ services:
       context: .
       network: host
     volumes:
-      - ./app/main.py:/app/main.py
+      - ./app:/app
     ports:
       - "8099:8099"
     depends_on:
